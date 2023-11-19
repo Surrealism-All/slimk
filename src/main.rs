@@ -59,10 +59,6 @@ impl InitCommand {
     fn cargo_new(&self) {
         let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
         let mut name = String::from(self.name());
-        if name.is_empty() {
-            // get current directory as name
-            name = get_work_path("").to_str().unwrap().to_string();
-        }
         let cmd = Command::new("cargo").args(&["new", &name]).output().expect("cargo new fail, please check your environment or rust toolchain is not installed in your computer!");
         if cmd.status.success() {
             println!("Slimk - [{}] : cargo new ---> (success)", timestamp);
@@ -70,39 +66,41 @@ impl InitCommand {
             eprintln!("Slimk - [{}] : {} ---> (fail)", timestamp, String::from_utf8_lossy(&cmd.stderr));
         }
     }
-    fn cargo_add_slint() {
+    fn cargo_add_slint(&self) {
         let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+        let path = get_work_path(self.name());
         // add slint
-        let slint = Command::new("cargo").args(&["add", "slint"]).output().expect("cargo add slint fail, please check your network!");
+        let slint = Command::new("cargo").args(&["add", "slint"]).current_dir(path.as_path()).output().expect("cargo add slint fail, please check your network!");
         if slint.status.success() {
             println!("Slimk - [{}] : cargo add slint ---> (success)", timestamp);
         } else {
             eprintln!("Slimk - [{}] : {} ---> (fail)", timestamp, String::from_utf8_lossy(&slint.stderr));
         }
         // add slint-build
-        let slint_build = Command::new("cargo").args(&["add", "slint-build", "--build"]).output().expect("cargo add slint-build fail, please check your network!");
+        let slint_build = Command::new("cargo").args(&["add", "slint-build", "--build"]).current_dir(path.as_path()).output().expect("cargo add slint-build fail, please check your network!");
         if slint_build.status.success() {
             println!("Slimk - [{}] : cargo add slint-build --build ---> (success)", timestamp);
         } else {
             eprintln!("Slimk - [{}] : {} ---> (fail)", timestamp, String::from_utf8_lossy(&slint_build.stderr));
         }
     }
-    fn add_build_rs() {
-        let build_rs = get_work_path("build.rs");
+    fn add_build_rs(&self) {
+        let build_rs = get_work_path(&format!("{}/{}", self.name(), "build.rs"));
         match File::create(build_rs.as_path()).unwrap().write_all(BUILD_RS.as_bytes()) {
             Ok(_) => println!("Slimk : Add build.rs ---> (success)"),
             Err(e) => panic!("Slimk : Add build.rs ---> (fail) => reason :\n{}", e),
         };
     }
-    fn add_readme() {
-        let readme = get_work_path("README.md");
+    fn add_readme(&self) {
+        let readme = get_work_path(&format!("{}/{}", self.name(), "README.md"));
         match File::create(readme.as_path()).unwrap().write_all(README_MD.as_bytes()) {
             Ok(_) => println!("Slimk : Add README.md ---> (success)"),
             Err(e) => panic!("Slimk : Add README.md ---> (fail) => reason :\n{}", e),
         };
     }
-    fn create_ui_dir() {
-        let ui_path = get_work_path("");
+    fn create_ui_dir(&self) {
+        let ui_path = get_work_path(&format!("{}/{}", self.name(), "ui"));
+        create_dir(&ui_path.as_path());
         create_dirs(&ui_path, UI_DIRS.to_vec());
         let assets_path = &ui_path.join("assets");
         create_dirs(assets_path, UI_DIRS_ASSETS.to_vec());
@@ -191,10 +189,10 @@ fn main() {
         SubCommand::Create(c) => println!("{:?}", c),
         SubCommand::Init(init) => {
             init.cargo_new();
-            InitCommand::cargo_add_slint();
-            InitCommand::add_build_rs();
-            InitCommand::add_readme();
-            InitCommand::create_ui_dir();
+            init.cargo_add_slint();
+            init.add_build_rs();
+            init.add_readme();
+            init.create_ui_dir();
         }
         SubCommand::List(list) => list.work(),
     }
