@@ -5,12 +5,12 @@ use super::{REMOTE_REPO, TEMPLATE_NOTE};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 ///Slimk配置类
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Conf {
     /// 用户名
-    user: String,
+    user: Option<String>,
     /// 邮件
-    email: String,
+    email: Option<String>,
     /// 远程模板仓库地址
     remotes: HashMap<String, Template>,
     /// 本地模板仓库地址
@@ -23,13 +23,13 @@ pub struct Conf {
 
 impl Default for Conf {
     fn default() -> Self {
-        let mut natives: HashMap<String, Template> = HashMap::new();
-        let _ = natives.insert(String::from("slimk"), Template::default_template());
+        let mut remotes: HashMap<String, Template> = HashMap::new();
+        let _ = remotes.insert(String::from("slimk"), Template::default_template());
         Conf {
-            user: "".to_string(),
-            email: "".to_string(),
-            remotes: Default::default(),
-            natives,
+            user: None,
+            email: None,
+            remotes,
+            natives:Default::default(),
             create_strategy: CreateStrategy::default(),
             update_strategy: UpdateStrategy::default(),
         }
@@ -48,10 +48,44 @@ impl Conf {
     pub fn add_remote(&mut self, name: &str, url: &str, note: Option<&str>) {
         let _ = self.remotes.insert(String::from(name), Template::new(url, note));
     }
+    pub fn user(&self) -> &Option<String> {
+        &self.user
+    }
+    pub fn email(&self) -> &Option<String> {
+        &self.email
+    }
+    pub fn natives(&self) -> &HashMap<String, Template> {
+        &self.natives
+    }
+    pub fn remotes(&self) -> &HashMap<String, Template> {
+        &self.remotes
+    }
+    pub fn update_strategy(&self) -> &UpdateStrategy {
+        &self.update_strategy
+    }
+    pub fn create_strategy(&self) -> &CreateStrategy {
+        &self.create_strategy
+    }
+    pub fn display_natives(&self) -> String {
+        self.natives().iter().map(|(key, value)| format!("{}:\n{}", key, value.to_string())).collect::<String>()
+    }
+    pub fn display_remotes(&self) -> String {
+        self.remotes().iter().map(|(key, value)| format!("{}:\n{}", key, value.to_string())).collect::<String>()
+    }
+    pub fn display_update_strategy(&self) -> String {
+        self.update_strategy().to_string()
+    }
+    pub fn display_create_strategy(&self) -> String {
+        self.create_strategy().to_string()
+    }
+    pub fn to_json(&self) -> String {
+        serde_json::to_string_pretty(self).unwrap()
+    }
 }
 
+
 /// 更新策略只针对本地仓库和缓存
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 struct UpdateStrategy {
     /// 更新本地仓库间隔
     /// - n == 0 : 每次下载都更新本地仓库
@@ -98,7 +132,7 @@ impl Display for UpdateStrategy {
 }
 
 /// 创建策略
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 struct CreateStrategy {
     /// - true : 表示尝试远程拉取来创建库（版本依赖为最新）
     /// - false : 表示不进行远程拉取，使用本地仓库创建
@@ -159,10 +193,10 @@ impl Display for CreateStrategy {
 }
 
 /// Template for creating
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Template {
     /// The id of the repository
-    id: u128,
+    id: usize,
     /// The url of the repository
     url: String,
     /// the note of the repository
@@ -173,7 +207,7 @@ impl Default for Template {
     fn default() -> Self {
         let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
         Template {
-            id: timestamp,
+            id: timestamp as usize,
             url: "".to_string(),
             note: "".to_string(),
         }

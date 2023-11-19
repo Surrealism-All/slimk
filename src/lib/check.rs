@@ -4,29 +4,37 @@ use std::io;
 use std::str::FromStr;
 use figment::Figment;
 use figment::providers::{Format, Json};
-use crate::Conf;
-use super::{DIRS, CONF_FILE,ConfCheckResult,get_env_path};
+use super::{DIRS, CONF_FILE, ConfCheckResult, get_env_path, Conf, CONF_FILE_PATH};
 
 
 /// 初始化服务
 pub struct CheckService;
 
 impl CheckService {
+    /// check the packages and configurations
     pub fn check() -> ConfCheckResult {
+        let mut counter = 0;
         if CheckService::check_dirs() {
             //完整则检查配置文件
             match CheckService::check_conf_exist() {
                 Ok(_) => {
                     //检查配置
                     match CheckService::check_conf() {
-                        Ok(_) => ConfCheckResult::ConfCheckSuccess,
-                        Err(_) => ConfCheckResult::ConfParseError
-                    }
+                        Ok(_) => counter = 100,
+                        Err(_) => counter += 2,
+                    };
                 }
-                Err(_) => ConfCheckResult::ConfFileNotFound
-            }
+                Err(_) => counter += 1,
+            };
         }
-        return ConfCheckResult::DirUnCompleted;
+
+        match counter {
+            0 => ConfCheckResult::DirUnCompleted,
+            1 => ConfCheckResult::ConfFileNotFound,
+            2 => ConfCheckResult::ConfParseError,
+            100 => ConfCheckResult::ConfCheckSuccess,
+            _ => ConfCheckResult::CheckError,
+        }
     }
 
     /// 检查文件目录是否完整
@@ -49,17 +57,16 @@ impl CheckService {
     /// 检查配置文件是否存在
     /// check whether the configuration file exists
     fn check_conf_exist() -> io::Result<bool> {
-        let conf_path = get_env_path("slimk.json");
+        let conf_path = get_env_path(CONF_FILE_PATH);
         return conf_path.try_exists();
     }
     /// 检查配置文件是否完整
     /// check configuration
     fn check_conf() -> Result<(), &'static str> {
-        let conf_path = get_env_path("slimk.json");
+        let conf_path = get_env_path(CONF_FILE_PATH);
         //获取配置信息
-        let parser = Figment::new();
-        let conf_data = parser.merge(Json::file(conf_path.as_path()).nested()).extract::<Conf>();
-        return if conf_data.is_err() {
+        let parser = Figment::from(<Json as Format>::file(conf_path.as_path())).extract::<Conf>();
+        return if parser.is_err() {
             Err("conf file parse error")
         } else {
             Ok(())

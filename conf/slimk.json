@@ -1,0 +1,22 @@
+{
+  "user": null,
+  "email": null,
+  "remotes": {
+    "slimk": {
+      "id": 1700388655887,
+      "url": "https://github.com/Surrealism-All/slimk-template",
+      "note": "Standard Template For Slint With SurrealismUI"
+    }
+  },
+  "natives": {},
+  "create_strategy": {
+    "remote": true,
+    "default": "slimk",
+    "secondary": "",
+    "define": false
+  },
+  "update_strategy": {
+    "native": 15,
+    "cache": 7
+  }
+}

@@ -1,5 +1,6 @@
 mod lib;
 
+use lib::{InitService, CheckService};
 use std::path::PathBuf;
 use std::str::FromStr;
 use clap::{Parser, Subcommand, Args};
@@ -16,7 +17,6 @@ struct Slimk {
     /// list all native templates and remote templates
     #[arg(long, short = 'l')]
     list: bool,
-
 }
 
 #[derive(Subcommand)]
@@ -42,9 +42,10 @@ struct InitCommand {
 
 fn main() {
     //启动时检查配置文件和包结构
-
+    let _ = InitService::init(CheckService::check());
     let app = Slimk::parse();
     match app.subcommand {
         SubCommand::Create(c) => println!("{:?}", c),
+        SubCommand::Init(init) => println!("{:?}", init)
     }
 }

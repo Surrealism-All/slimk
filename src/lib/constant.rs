@@ -2,9 +2,10 @@
 /// repo 作为存储库目录
 /// log 作为日志目录
 /// cache 作为存储库的缓存目录（15天清理）
-pub const DIRS: Vec<&str> = vec!["conf", "repo", "cache", "log"];
+pub const DIRS: [&str; 4] = ["conf", "repo", "cache", "log"];
 /// 配置文件:slimk.json
 pub const CONF_FILE: &str = "slimk.json";
+pub const CONF_FILE_PATH: &str = "conf/slimk.json";
 /// author
 pub const AUTHOR: &str = "syf20020816@outlook.com";
 /// standard remote repository
