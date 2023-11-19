@@ -8,6 +8,8 @@ use super::{DIRS, CONF_FILE, ConfCheckResult, get_env_path, Conf, CONF_FILE_PATH
 
 
 /// 初始化服务
+/// CheckService
+/// check directories and configuration use
 pub struct CheckService;
 
 impl CheckService {
@@ -42,6 +44,7 @@ impl CheckService {
     fn check_dirs() -> bool {
         //获取当前目录
         let dir_path = get_env_path("");
+        dbg!(&dir_path);
         //遍历当前目录
         let dirs = dir_path.read_dir().expect("Invalid directory");
         let mut counter = 0;

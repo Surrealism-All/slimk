@@ -10,14 +10,13 @@ pub struct InitService;
 
 impl InitService {
     pub fn init(result: ConfCheckResult) {
-        dbg!(&result);
         match result {
             ConfCheckResult::DirUnCompleted => InitService::init_all(),
             ConfCheckResult::ConfFileNotFound => {
                 if InitService::init_conf() {
                     if InitService::init_conf_data() {
                         println!("{}", "Slimk : init conf successfully!");
-                    }else{
+                    } else {
                         panic!("Slimk : init conf data error , Slimk can not open conf file or write configuration into conf file!");
                     }
                 } else {
@@ -29,7 +28,7 @@ impl InitService {
                     panic!("Slimk : init conf data error , Slimk can not open conf file or write configuration into conf file!");
                 }
             }
-            ConfCheckResult::ConfCheckSuccess => println!("Slimk : check and init successfully!"),
+            ConfCheckResult::ConfCheckSuccess => (),
             ConfCheckResult::CheckError => println!("Slimk : check Error!")
         };
     }
@@ -42,7 +41,7 @@ impl InitService {
             if InitService::init_conf() {
                 if InitService::init_conf_data() {
                     println!("{}", "Slimk : init conf successfully!");
-                }else{
+                } else {
                     panic!("Slimk : init conf data error , Slimk can not open conf file or write configuration into conf file!");
                 }
             } else {

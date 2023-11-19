@@ -7,9 +7,11 @@ A package manager for creating Slint with SurrealismUI
 - updateDate : 20231119
 - version : 0.0.1
 
-## Command
+## Commands
 
 ### Create Slint Project
+
+create a project by selecting configuration items
 
 ```bash
 # use default strategy to create a new project
@@ -33,12 +35,14 @@ this command creates a new project but use the default strategy with no template
 > slimk list -n
 # remote 
 > slimk list -r
+# both
+> slimk list -a
 ```
 
 ## Goals
 
 - [x] : create command
 - [ ] : init command
-- [ ] : list command
+- [x] : list command
 - [ ] : update command
 - [x] : --list options

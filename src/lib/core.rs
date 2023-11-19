@@ -1,8 +1,11 @@
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use serde::{Serialize, Deserialize};
-use super::{REMOTE_REPO, TEMPLATE_NOTE};
+use super::{REMOTE_REPO, TEMPLATE_NOTE, CONF_FILE_PATH};
 use std::time::{SystemTime, UNIX_EPOCH};
+use figment::Figment;
+use figment::providers::{Json, Format};
+use crate::lib::get_env_path;
 
 ///Slimk配置类
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -29,7 +32,7 @@ impl Default for Conf {
             user: None,
             email: None,
             remotes,
-            natives:Default::default(),
+            natives: Default::default(),
             create_strategy: CreateStrategy::default(),
             update_strategy: UpdateStrategy::default(),
         }
@@ -80,6 +83,11 @@ impl Conf {
     }
     pub fn to_json(&self) -> String {
         serde_json::to_string_pretty(self).unwrap()
+    }
+    /// get configuration from slimk.json
+    pub fn from_json() -> Conf {
+        let conf_path = get_env_path(CONF_FILE_PATH);
+        Figment::from(<Json as Format>::file(conf_path.as_path())).extract::<Conf>().unwrap()
     }
 }
 

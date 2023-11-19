@@ -7,7 +7,7 @@ mod constant;
 
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::env::current_dir;
+use std::env::{current_dir, current_exe};
 pub use constant::*;
 pub use core::Conf;
 pub use init::InitService;
@@ -30,6 +30,20 @@ pub enum ConfCheckResult {
 }
 
 pub fn get_env_path(patch: &str) -> PathBuf {
+    let env = current_exe().expect("can not operate the target directory");
+    let env: Vec<&str> = env.to_str().unwrap().split("slimk.exe").collect();
+    return if patch.is_empty() {
+        PathBuf::from(env[0])
+    } else {
+        PathBuf::from(env[0]).join(patch)
+    };
+}
+
+pub fn get_work_path(patch: &str) -> PathBuf {
     let env = current_dir().expect("can not operate the target directory");
-    return env.join(patch);
+    return if patch.is_empty() {
+        env
+    } else {
+        env.join(patch)
+    };
 }
