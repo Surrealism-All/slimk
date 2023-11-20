@@ -45,4 +45,5 @@ this command creates a new project but use the default strategy with no template
 - [x] : init command
 - [x] : list command
 - [ ] : update command
+- [ ] : config command 
 - [x] : --list options

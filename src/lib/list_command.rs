@@ -3,11 +3,11 @@ use clap::Args;
 
 #[derive(Args, Debug, Clone)]
 pub struct ListCommand {
-    #[arg(long, short = 'a', help = "list both native templates and remotes templates", groups = "list")]
+    #[arg(long, short = 'a', help = "list both native templates and remotes templates", group = "list")]
     all: bool,
-    #[arg(long, short = 'n', help = "list native templates", groups = "list")]
+    #[arg(long, short = 'n', help = "list native templates", group = "list")]
     native: bool,
-    #[arg(long, short = 'r', help = "list remote templates", groups = "list")]
+    #[arg(long, short = 'r', help = "list remote templates", group = "list")]
     remote: bool,
 }
 

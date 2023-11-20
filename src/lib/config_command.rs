@@ -18,10 +18,10 @@ impl ConfigCommand {
             match conf {
                 ConfigEnum::User => println!("{:?}", conf_data.user()),
                 ConfigEnum::Email => println!("{:?}", conf_data.email()),
-                ConfigEnum::Remotes => println!("{:?}", conf_data.display_remotes()),
-                ConfigEnum::Natives => println!("{:?}", conf_data.display_natives()),
-                ConfigEnum::Create => println!("{:?}", conf_data.display_create_strategy()),
-                ConfigEnum::Update => println!("{:?}", conf_data.display_update_strategy()),
+                ConfigEnum::Remotes => println!("{}", conf_data.display_remotes()),
+                ConfigEnum::Natives => println!("{}", conf_data.display_natives()),
+                ConfigEnum::Create => println!("{}", conf_data.display_create_strategy()),
+                ConfigEnum::Update => println!("{}", conf_data.display_update_strategy()),
             };
         }
     }
