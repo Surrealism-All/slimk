@@ -4,11 +4,11 @@ use lib::{CheckService, InitService, SubCommand, Slimk};
 use clap::Parser;
 
 fn main() {
-    //check configuration files and package structure at startup
+    // check configuration files and package structure at startup
     let _ = InitService::init(CheckService::check());
     let app = Slimk::parse();
     match app.sub_command() {
-        SubCommand::Create(c) => println!("{:?}", c),
+        SubCommand::Create(create) => println!("{:?}", create),
         SubCommand::Init(init) => {
             init.cargo_new();
             init.cargo_add_slint();
@@ -17,5 +17,6 @@ fn main() {
             init.create_ui_dir();
         }
         SubCommand::List(list) => list.work(),
+        SubCommand::Config(conf) => conf.work(),
     }
 }

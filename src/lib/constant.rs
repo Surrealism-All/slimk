@@ -12,9 +12,11 @@ pub const UI_FILES: [&str; 3] = ["index.slint", "global.slint", "app.slint"];
 pub const UI_FILES_COMPONENTS: [&str; 2] = ["hello.slint", "index.slint"];
 pub const UI_FILES_VIEWS: [&str; 2] = ["main.slint", "index.slint"];
 /// 配置文件:slimk.json
+#[allow(dead_code)]
 pub const CONF_FILE: &str = "slimk.json";
 pub const CONF_FILE_PATH: &str = "conf/slimk.json";
 /// author
+#[allow(dead_code)]
 pub const AUTHOR: &str = "syf20020816@outlook.com";
 /// standard remote repository
 pub const REMOTE_REPO: &str = "https://github.com/Surrealism-All/slimk-template";

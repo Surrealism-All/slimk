@@ -1,24 +1,25 @@
 mod core;
 mod init_command;
 mod list_command;
-mod check;
+mod config_command;
 mod create_command;
+mod check;
 mod init;
 mod constant;
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 use std::env::{current_dir, current_exe};
 use std::fs::{create_dir, File};
 use std::io::Write;
-use clap::{Parser, Args, Subcommand};
+use clap::{Parser, Subcommand};
 
 pub use check::CheckService;
 pub use init::InitService;
 use create_command::CreateCommand;
 use init_command::InitCommand;
 use list_command::ListCommand;
+use config_command::ConfigCommand;
 
 #[derive(Parser)]
 #[command(name = "Slimk")]
@@ -48,6 +49,8 @@ pub enum SubCommand {
     Init(InitCommand),
     /// list all native templates and remote templates
     List(ListCommand),
+    /// get or set slimk configurations
+    Config(ConfigCommand),
 }
 
 ///配置检测结果

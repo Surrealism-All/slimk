@@ -1,11 +1,8 @@
-use std::fs::read_dir;
-use std::path::PathBuf;
 use std::io;
-use std::str::FromStr;
 use figment::Figment;
 use figment::providers::{Format, Json};
 use super::core::Conf;
-use super::constant::{DIRS, CONF_FILE, CONF_FILE_PATH};
+use super::constant::{DIRS, CONF_FILE_PATH};
 use super::{ConfCheckResult, get_env_path};
 
 /// 初始化服务
@@ -13,6 +10,7 @@ use super::{ConfCheckResult, get_env_path};
 /// check directories and configuration use
 pub struct CheckService;
 
+#[allow(dead_code)]
 impl CheckService {
     /// check the packages and configurations
     pub fn check() -> ConfCheckResult {

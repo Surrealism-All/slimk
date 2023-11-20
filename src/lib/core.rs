@@ -39,6 +39,7 @@ impl Default for Conf {
     }
 }
 
+#[allow(dead_code)]
 impl Conf {
     pub fn new() -> Conf {
         Conf::default()
@@ -94,7 +95,7 @@ impl Conf {
 
 /// 更新策略只针对本地仓库和缓存
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-struct UpdateStrategy {
+pub struct UpdateStrategy {
     /// 更新本地仓库间隔
     /// - n == 0 : 每次下载都更新本地仓库
     /// - n <= -1: 永远不更新本地仓库
@@ -115,6 +116,7 @@ impl Default for UpdateStrategy {
     }
 }
 
+#[allow(dead_code)]
 impl UpdateStrategy {
     pub fn new() -> Self {
         UpdateStrategy::default()
@@ -141,7 +143,7 @@ impl Display for UpdateStrategy {
 
 /// 创建策略
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-struct CreateStrategy {
+pub struct CreateStrategy {
     /// - true : 表示尝试远程拉取来创建库（版本依赖为最新）
     /// - false : 表示不进行远程拉取，使用本地仓库创建
     remote: bool,
@@ -164,6 +166,7 @@ impl Default for CreateStrategy {
     }
 }
 
+#[allow(dead_code)]
 impl CreateStrategy {
     pub fn new() -> Self {
         CreateStrategy::default()
@@ -222,6 +225,7 @@ impl Default for Template {
     }
 }
 
+#[allow(dead_code)]
 impl Template {
     pub fn new(url: &str, note: Option<&str>) -> Self {
         let mut template = Template::default();

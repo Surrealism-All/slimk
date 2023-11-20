@@ -3,14 +3,15 @@ use clap::Args;
 
 #[derive(Args, Debug, Clone)]
 pub struct ListCommand {
-    #[arg(long, short = 'a', help = "list both native templates and remotes templates")]
+    #[arg(long, short = 'a', help = "list both native templates and remotes templates", groups = "list")]
     all: bool,
-    #[arg(long, short = 'n', help = "list native templates")]
+    #[arg(long, short = 'n', help = "list native templates", groups = "list")]
     native: bool,
-    #[arg(long, short = 'r', help = "list remote templates")]
+    #[arg(long, short = 'r', help = "list remote templates", groups = "list")]
     remote: bool,
 }
 
+#[allow(dead_code)]
 impl ListCommand {
     pub fn is_all(&self) -> bool {
         self.all
@@ -29,7 +30,6 @@ impl ListCommand {
             return;
         }
         if self.is_remote() {
-            /// get configuration : remotes
             println!("{}", conf.display_remotes());
             return;
         }

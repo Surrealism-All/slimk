@@ -1,10 +1,9 @@
-use super::constant::{DIRS, CONF_FILE, CONF_FILE_PATH};
+use super::constant::{DIRS, CONF_FILE_PATH};
 use super::{ConfCheckResult, get_env_path};
-use std::fs::{create_dir, create_dir_all};
+use std::fs::{create_dir};
 use std::path::Path;
 use std::fs::File;
-use std::io;
-use std::io::{stdout, Write};
+use std::io::{Write};
 use super::core::Conf;
 
 pub struct InitService;
