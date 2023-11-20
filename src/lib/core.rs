@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use serde::{Serialize, Deserialize};
-use super::{REMOTE_REPO, TEMPLATE_NOTE, CONF_FILE_PATH};
+use super::constant::{REMOTE_REPO, TEMPLATE_NOTE, CONF_FILE_PATH};
 use std::time::{SystemTime, UNIX_EPOCH};
 use figment::Figment;
 use figment::providers::{Json, Format};
@@ -196,7 +196,7 @@ impl CreateStrategy {
 
 impl Display for CreateStrategy {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "create strategy =>\nAttempting to create a template using a remote repository : {}\ndefault template: {}\nsecondary template: {}\n define create: {}", self.remote(), self.default_repo(), self.secondary_repo(), self.define())
+        write!(f, "create_command strategy =>\nAttempting to create_command a template using a remote repository : {}\ndefault template: {}\nsecondary template: {}\n define create_command: {}", self.remote(), self.default_repo(), self.secondary_repo(), self.define())
     }
 }
 

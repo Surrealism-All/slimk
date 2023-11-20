@@ -43,14 +43,14 @@ VSCode
 
 ### Create Slint Project
 
-create a project by selecting configuration items
+create_command a project by selecting configuration items
 
 ```bash
-# use default strategy to create a new project
-> slimk create hello
-# create a new project with a template
-> slimk create hello --template slimk
-> slimk create hello -t slimk
+# use default strategy to create_command a new project
+> slimk create_command hello
+# create_command a new project with a template
+> slimk create_command hello --template slimk
+> slimk create_command hello -t slimk
 ```
 ### Init an empty Slint Project
 

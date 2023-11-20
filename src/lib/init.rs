@@ -1,10 +1,11 @@
-use super::{ConfCheckResult, DIRS, CONF_FILE, get_env_path, CONF_FILE_PATH};
+use super::constant::{DIRS, CONF_FILE, CONF_FILE_PATH};
+use super::{ConfCheckResult, get_env_path};
 use std::fs::{create_dir, create_dir_all};
 use std::path::Path;
 use std::fs::File;
 use std::io;
 use std::io::{stdout, Write};
-use crate::lib::core::Conf;
+use super::core::Conf;
 
 pub struct InitService;
 
@@ -20,7 +21,7 @@ impl InitService {
                         panic!("Slimk : init conf data error , Slimk can not open conf file or write configuration into conf file!");
                     }
                 } else {
-                    panic!("Slimk : can not create conf file!")
+                    panic!("Slimk : can not create_command conf file!")
                 }
             }
             ConfCheckResult::ConfParseError => {
@@ -45,10 +46,10 @@ impl InitService {
                     panic!("Slimk : init conf data error , Slimk can not open conf file or write configuration into conf file!");
                 }
             } else {
-                panic!("Slimk : can not create conf file!")
+                panic!("Slimk : can not create_command conf file!")
             }
         } else {
-            panic!("Slimk : can not create needed directories!")
+            panic!("Slimk : can not create_command needed directories!")
         }
     }
     fn init_dirs() -> bool {

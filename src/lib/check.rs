@@ -4,8 +4,9 @@ use std::io;
 use std::str::FromStr;
 use figment::Figment;
 use figment::providers::{Format, Json};
-use super::{DIRS, CONF_FILE, ConfCheckResult, get_env_path, Conf, CONF_FILE_PATH};
-
+use super::core::Conf;
+use super::constant::{DIRS, CONF_FILE, CONF_FILE_PATH};
+use super::{ConfCheckResult, get_env_path};
 
 /// 初始化服务
 /// CheckService

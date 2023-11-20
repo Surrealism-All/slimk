@@ -41,8 +41,8 @@ this command creates a new project but use the default strategy with no template
 
 ## Goals
 
-- [x] : create command
-- [ ] : init command
+- [ ] : create command
+- [x] : init command
 - [x] : list command
 - [ ] : update command
 - [x] : --list options
