@@ -49,7 +49,7 @@ impl CheckService {
         for dir in dirs {
             if DIRS.contains(&dir.unwrap().file_name().to_str().unwrap()) { counter += 1; }
         }
-        return if counter == 4 {
+        return if counter == 3 {
             true
         } else {
             false

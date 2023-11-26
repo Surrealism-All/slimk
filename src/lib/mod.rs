@@ -10,12 +10,16 @@ mod constant;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::env::{current_dir, current_exe};
-use std::fs::{create_dir, File};
-use std::io::Write;
+use std::error::Error;
+use std::fs::{copy, create_dir, create_dir_all, File, read_dir, remove_dir};
+use std::io;
+use std::io::{Read, Write};
 use clap::{Parser, Subcommand};
+use zip::ZipArchive;
 
 pub use check::CheckService;
 pub use init::InitService;
+pub use core::Conf;
 use create_command::CreateCommand;
 use init_command::InitCommand;
 use list_command::ListCommand;
@@ -118,4 +122,59 @@ pub fn format_dir_name(prefix: &str, other: &str) -> PathBuf {
     } else {
         get_work_path(&format!("{}/{}", prefix, other))
     };
+}
+
+pub fn unzip_file(zip_path: &Path, extract_to: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    if extract_to.exists() {
+        let _ = remove_dir(extract_to);
+    }
+    match create_dir(extract_to) {
+        Ok(_) => {
+            // 打开 ZIP 文件
+            let file = File::open(zip_path)?;
+            // 创建 ZIP 归档对象
+            let mut archive = ZipArchive::new(file)?;
+            // 遍历 ZIP 归档中的每个文件
+            for i in 0..archive.len() {
+                let mut file = archive.by_index(i)?;
+                // 构建文件的目标路径
+                let dest_path = get_env_path("repo").join(file.name());
+                if file.is_dir() {
+                    std::fs::create_dir_all(&dest_path)?;
+                } else {
+                    // 如果是文件，创建文件并写入数据
+                    let mut buffer = Vec::new();
+                    file.read_to_end(&mut buffer)?;
+                    let mut extracted_file = File::create(dest_path)?;
+                    extracted_file.write_all(&buffer)?;
+                }
+            }
+            Ok(())
+        }
+        Err(e) => {
+            Err(Box::new(e))
+        }
+    }
+}
+
+pub fn copy_dir(src: &Path, dest: &Path) -> io::Result<()> {
+    // 创建目标目录
+    create_dir_all(dest)?;
+
+    // 遍历源目录中的所有条目
+    for entry in read_dir(src)? {
+        let entry = entry?;
+        let entry_path = entry.path();
+        let dest_path = dest.join(entry.file_name());
+
+        // 如果是目录，递归复制目录
+        if entry_path.is_dir() {
+            copy_dir(&entry_path, &dest_path)?;
+        } else {
+            // 如果是文件，复制文件
+            copy(&entry_path, &dest_path)?;
+        }
+    }
+
+    Ok(())
 }

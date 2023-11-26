@@ -31,6 +31,29 @@ impl InitService {
             ConfCheckResult::ConfCheckSuccess => (),
             ConfCheckResult::CheckError => println!("Slimk : check Error!")
         };
+        // native and cache
+        let conf = Conf::from_json();
+        let update_strategy = conf.update_strategy().clone();
+        //check native repo
+        match get_env_path("repo").read_dir() {
+            Ok(inner) => {
+                let mut is_empty = true;
+                for _item in inner {
+                    is_empty = false;
+                    if update_strategy.is_native_updated() {
+                        let _ = update_strategy.update_native();
+                    }
+                    if update_strategy.is_cache_updated() {
+                        let _ = update_strategy.update_cache();
+                    }
+                }
+                if is_empty {
+                    let _ = update_strategy.update_native();
+                    let _ = update_strategy.update_cache();
+                }
+            }
+            Err(e) => { panic!("{}", e) }
+        }
     }
     /// match ConfCheckResult::DirUnCompleted
     /// - 1. init_dirs()
@@ -45,18 +68,22 @@ impl InitService {
                     panic!("Slimk : init conf data error , Slimk can not open conf file or write configuration into conf file!");
                 }
             } else {
-                panic!("Slimk : can not create_command conf file!")
+                panic!("Slimk : can not create conf file!")
             }
         } else {
-            panic!("Slimk : can not create_command needed directories!")
+            panic!("Slimk : can not create needed directories!")
         }
     }
     fn init_dirs() -> bool {
         let dir_path = get_env_path("");
         for dir in DIRS {
             let target_path = dir_path.join(Path::new(dir));
-            if create_dir(target_path.as_path()).is_err() {
-                return false;
+            if target_path.exists() {
+                continue;
+            } else {
+                if create_dir(target_path.as_path()).is_err() {
+                    return false;
+                }
             }
         }
         return true;
@@ -84,5 +111,12 @@ impl InitService {
             };
         }
         false
+    }
+    pub fn init_native_cache() {
+        let native = get_env_path("repo").join("slimk-binary");
+        if !native.exists() {
+            let up = Conf::from_json();
+            up.update_strategy().update_native();
+        }
     }
 }

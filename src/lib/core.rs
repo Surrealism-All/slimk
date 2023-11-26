@@ -1,11 +1,17 @@
 use std::collections::HashMap;
+use std::error::Error;
 use std::fmt::{Display, Formatter};
+use std::path::Path;
+use std::process::Command;
 use serde::{Serialize, Deserialize};
+use std::fs::{copy, read_dir, remove_dir, remove_dir_all, remove_file};
 use super::constant::{REMOTE_REPO, TEMPLATE_NOTE, CONF_FILE_PATH};
+use super::{unzip_file, get_env_path, copy_dir};
 use std::time::{SystemTime, UNIX_EPOCH};
 use figment::Figment;
 use figment::providers::{Json, Format};
-use crate::lib::get_env_path;
+use serde_json::Value;
+
 
 ///Slimk配置类
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -27,7 +33,7 @@ pub struct Conf {
 impl Default for Conf {
     fn default() -> Self {
         let mut remotes: HashMap<String, Template> = HashMap::new();
-        let _ = remotes.insert(String::from("slimk"), Template::default_template());
+        let _ = remotes.insert(String::from("slimk-binary"), Template::default_template());
         Conf {
             user: None,
             email: None,
@@ -105,6 +111,7 @@ pub struct UpdateStrategy {
     /// - <= -1 : 不启用cache
     /// - 0 ：每次本地仓库更新都生成cache
     cache: i32,
+    timestamp: usize,
 }
 
 impl Default for UpdateStrategy {
@@ -112,6 +119,7 @@ impl Default for UpdateStrategy {
         UpdateStrategy {
             native: 15,
             cache: 7,
+            timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as usize,
         }
     }
 }
@@ -127,12 +135,136 @@ impl UpdateStrategy {
     pub fn cache(&self) -> i32 {
         self.cache
     }
+    pub fn timestamp(&self) -> usize {
+        self.timestamp
+    }
+    pub fn set_timestamp(&mut self, timestamp: usize) {
+        self.timestamp = timestamp
+    }
     pub fn set_native(&mut self, native: i32) {
         self.native = native;
     }
     pub fn set_cache(&mut self, cache: i32) {
         self.cache = cache
     }
+    pub fn is_native_updated(&self) -> bool {
+        UpdateStrategy::is_updated(self.native(), self.timestamp())
+    }
+    pub fn is_cache_updated(&self) -> bool {
+        UpdateStrategy::is_updated(self.cache(), self.timestamp())
+    }
+    pub fn is_updated(target: i32, timestamp: usize) -> bool {
+        return if target == 0 {
+            // update each
+            true
+        } else if target <= -1 {
+            // never update
+            false
+        } else {
+            let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as isize;
+            let update = timestamp + (target as usize) * 86400000_usize;
+            if now - (update as isize) < 0 {
+                // update time has not arrived
+                return false;
+            }
+            true
+        };
+    }
+    pub fn update_native(&self) {
+        if ping_github() {
+            let repo = get_env_path("repo");
+            if let Some(url) = get_release_url_from_github(Some("latest")) {
+                let curl = Command::new("curl").args([
+                    "-L", "-H", "Accept: application/vnd.github+json", "-H", "X-GitHub-Api-Version: 2022-11-28", "-o", "slimk-binary.zip", &url
+                ]).current_dir(Path::new(&repo)).output().unwrap();
+                if curl.status.success() {
+                    //unzip
+                    match unzip_file(repo.join("slimk-binary.zip").as_path(), repo.join("slimk-binary").as_path()) {
+                        Ok(_) => {
+                            remove_file(repo.join("slimk-binary.zip").as_path());
+                        }
+                        Err(e) => {
+                            panic!("Slimk : {}", e)
+                        }
+                    }
+                } else {
+                    panic!("{}", "download failed, please check your network settings!");
+                }
+            }
+        }
+    }
+    pub fn update_cache(&self) {
+        let cache = get_env_path("cache");
+        let cache_dir = cache.read_dir().unwrap();
+        for item in cache_dir {
+            let _ = remove_dir_all(item.unwrap().path().as_path());
+        }
+        let native = get_env_path("repo");
+        copy_dir(native.as_path(), cache.as_path());
+    }
+}
+
+///check connection to github
+pub fn ping_github() -> bool {
+    let ping = Command::new("ping").arg("github.com").output().expect("Slimk : can not connect to github , please check your network settings!");
+    return if ping.status.success() {
+        true
+    } else {
+        false
+    };
+}
+
+pub fn get_releases_from_github() -> Option<Vec<Value>> {
+    let curl = Command::new("curl").args([
+        "-L", "-H", "Accept: application/vnd.github+json", "-H", "X-GitHub-Api-Version: 2022-11-28",
+        "https://api.github.com/repos/Surrealism-All/slimk-template/releases"
+    ]).output().unwrap();
+
+    if curl.status.success() {
+        // stdout -> json
+        let stdout_str = String::from_utf8(curl.stdout).unwrap();
+        let json: Value = serde_json::from_str(&stdout_str).unwrap();
+        if let Some(array) = json.as_array() {
+            return Some(array.clone());
+        }
+    }
+    return None;
+}
+
+pub fn get_releases_tags_from_github() -> Vec<String> {
+    if let Some(releases) = get_releases_from_github() {
+        if !releases.is_empty() {
+            let mut tags = Vec::new();
+            for item in releases {
+                if let Some(map) = item.as_object() {
+                    tags.push(map.get("tag_name").unwrap().as_str().unwrap().to_string());
+                }
+            }
+            return tags;
+        }
+    }
+    Vec::new()
+}
+
+/// get release download url form github
+pub fn get_release_url_from_github(tag: Option<&str>) -> Option<String> {
+    if let Some(version) = tag {
+        let url = format!("https://api.github.com/repos/Surrealism-All/slimk-template/releases/{}", version);
+        let curl = Command::new("curl").args([
+            "-L", "-H", "Accept: application/vnd.github+json", "-H", "X-GitHub-Api-Version: 2022-11-28", &url
+        ]).output().unwrap();
+        if curl.status.success() {
+            let stdout_str = String::from_utf8(curl.stdout).unwrap();
+            let json: Value = serde_json::from_str(&stdout_str).unwrap();
+            if let Some(map) = json.as_object() {
+                let value = map.get("assets").unwrap();
+                if let Some(assets) = value.as_array() {
+                    return Some(assets[0].as_object().unwrap().get("browser_download_url").unwrap().as_str().unwrap().to_string());
+                }
+            }
+        }
+    }
+    None
 }
 
 impl Display for UpdateStrategy {
@@ -199,7 +331,7 @@ impl CreateStrategy {
 
 impl Display for CreateStrategy {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "create_command strategy =>\nAttempting to create_command a template using a remote repository : {}\ndefault template: {}\nsecondary template: {}\n define create_command: {}", self.remote(), self.default_repo(), self.secondary_repo(), self.define())
+        write!(f, "create_command strategy =>\nAttempting to create_command a template using a remote repository : {}\ndefault template: {}\nsecondary template: {}\ndefine create_command: {}", self.remote(), self.default_repo(), self.secondary_repo(), self.define())
     }
 }
 

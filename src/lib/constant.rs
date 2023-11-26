@@ -2,7 +2,7 @@
 /// repo 作为存储库目录
 /// log 作为日志目录
 /// cache 作为存储库的缓存目录（15天清理）
-pub const DIRS: [&str; 4] = ["conf", "repo", "cache", "log"];
+pub const DIRS: [&str; 3] = ["conf", "repo", "cache"];
 /// index.slint : global components in project
 /// main.slint : then enter point
 /// global.slint : global singleton
@@ -18,8 +18,8 @@ pub const CONF_FILE_PATH: &str = "conf/slimk.json";
 /// author
 #[allow(dead_code)]
 pub const AUTHOR: &str = "syf20020816@outlook.com";
-/// standard remote repository
-pub const REMOTE_REPO: &str = "https://github.com/Surrealism-All/slimk-template";
+/// standard remote repository: owner/repo
+pub const REMOTE_REPO: &str = "Surrealism-All/slimk-template";
 /// standard template note
 pub const TEMPLATE_NOTE: &str = "Standard Template For Slint With SurrealismUI";
 
