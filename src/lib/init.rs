@@ -33,10 +33,11 @@ impl InitService {
         };
         // native and cache
         let conf = Conf::from_json();
-        let update_strategy = conf.update_strategy().clone();
+        let mut update_strategy = conf.update_strategy().clone();
         //check native repo
         match get_env_path("repo").read_dir() {
             Ok(inner) => {
+                println!("Slimk : {}", "Downloading | Updating default template...");
                 let mut is_empty = true;
                 for _item in inner {
                     is_empty = false;
@@ -114,9 +115,18 @@ impl InitService {
     }
     pub fn init_native_cache() {
         let native = get_env_path("repo").join("slimk-binary");
-        if !native.exists() {
-            let up = Conf::from_json();
-            up.update_strategy().update_native();
+        let mut up = Conf::from_json().update_strategy().clone();
+        if native.exists() {
+            //empty
+            let mut flag = true;
+            for _ in native.read_dir().expect("cannot read dir") {
+                flag = false;
+                break;
+            }
+            if flag {
+                let _ = up.update_native();
+                let _ = up.update_cache();
+            }
         }
     }
 }

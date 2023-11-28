@@ -4,7 +4,8 @@ use std::fmt::{Display, Formatter};
 use std::path::Path;
 use std::process::Command;
 use serde::{Serialize, Deserialize};
-use std::fs::{copy, read_dir, remove_dir, remove_dir_all, remove_file};
+use std::fs::{copy, File, read_dir, remove_dir, remove_dir_all, remove_file};
+use std::io::Write;
 use super::constant::{REMOTE_REPO, TEMPLATE_NOTE, CONF_FILE_PATH};
 use super::{unzip_file, get_env_path, copy_dir};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -32,8 +33,14 @@ pub struct Conf {
 
 impl Default for Conf {
     fn default() -> Self {
+        let tags = get_releases_tags_from_github();
+        // get latest release
+        let url = get_release_url_from_github(Some(&tags[0])).unwrap();
+        //new a template
+        let mut template = Template::default_template();
+        template.set_url(&url);
         let mut remotes: HashMap<String, Template> = HashMap::new();
-        let _ = remotes.insert(String::from("slimk-binary"), Template::default_template());
+        let _ = remotes.insert(String::from("slimk-binary"), template);
         Conf {
             user: None,
             email: None,
@@ -69,6 +76,12 @@ impl Conf {
     }
     pub fn remotes(&self) -> &HashMap<String, Template> {
         &self.remotes
+    }
+    pub fn native_insert(&mut self, name: &str, url: &str, note: Option<&str>) {
+        self.natives.insert(String::from(name), Template::new(url, note));
+    }
+    pub fn set_update_strategy(&mut self, update_strategy: UpdateStrategy) {
+        self.update_strategy = update_strategy;
     }
     pub fn update_strategy(&self) -> &UpdateStrategy {
         &self.update_strategy
@@ -111,7 +124,8 @@ pub struct UpdateStrategy {
     /// - <= -1 : 不启用cache
     /// - 0 ：每次本地仓库更新都生成cache
     cache: i32,
-    timestamp: usize,
+    native_timestamp: usize,
+    cache_timestamp: usize,
 }
 
 impl Default for UpdateStrategy {
@@ -119,7 +133,8 @@ impl Default for UpdateStrategy {
         UpdateStrategy {
             native: 15,
             cache: 7,
-            timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as usize,
+            native_timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as usize,
+            cache_timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as usize,
         }
     }
 }
@@ -135,11 +150,17 @@ impl UpdateStrategy {
     pub fn cache(&self) -> i32 {
         self.cache
     }
-    pub fn timestamp(&self) -> usize {
-        self.timestamp
+    pub fn native_timestamp(&self) -> usize {
+        self.native_timestamp
     }
-    pub fn set_timestamp(&mut self, timestamp: usize) {
-        self.timestamp = timestamp
+    pub fn set_native_timestamp(&mut self, timestamp: usize) {
+        self.native_timestamp = timestamp
+    }
+    pub fn cache_timestamp(&self) -> usize {
+        self.cache_timestamp
+    }
+    pub fn set_cache_timestamp(&mut self, timestamp: usize) {
+        self.cache_timestamp = timestamp
     }
     pub fn set_native(&mut self, native: i32) {
         self.native = native;
@@ -148,10 +169,10 @@ impl UpdateStrategy {
         self.cache = cache
     }
     pub fn is_native_updated(&self) -> bool {
-        UpdateStrategy::is_updated(self.native(), self.timestamp())
+        UpdateStrategy::is_updated(self.native(), self.native_timestamp())
     }
     pub fn is_cache_updated(&self) -> bool {
-        UpdateStrategy::is_updated(self.cache(), self.timestamp())
+        UpdateStrategy::is_updated(self.cache(), self.cache_timestamp())
     }
     pub fn is_updated(target: i32, timestamp: usize) -> bool {
         return if target == 0 {
@@ -170,7 +191,7 @@ impl UpdateStrategy {
             true
         };
     }
-    pub fn update_native(&self) {
+    pub fn update_native(&mut self) {
         if ping_github() {
             let repo = get_env_path("repo");
             if let Some(url) = get_release_url_from_github(Some("latest")) {
@@ -182,6 +203,13 @@ impl UpdateStrategy {
                     match unzip_file(repo.join("slimk-binary.zip").as_path(), repo.join("slimk-binary").as_path()) {
                         Ok(_) => {
                             remove_file(repo.join("slimk-binary.zip").as_path());
+                            //update timestamp
+                            let _ = self.set_native_timestamp(SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as usize);
+                            let mut conf = Conf::from_json();
+                            let _ = conf.set_update_strategy(self.clone());
+                            let _ = conf.native_insert("slimk-binary",repo.join("slimk-binary").to_str().unwrap(),Some("this is a native default template use Slint with SurrealismUI"));
+                            let conf_path = get_env_path(CONF_FILE_PATH);
+                            let _ = File::create(conf_path).unwrap().write_all(conf.to_json().as_bytes());
                         }
                         Err(e) => {
                             panic!("Slimk : {}", e)
@@ -193,7 +221,7 @@ impl UpdateStrategy {
             }
         }
     }
-    pub fn update_cache(&self) {
+    pub fn update_cache(&mut self) {
         let cache = get_env_path("cache");
         let cache_dir = cache.read_dir().unwrap();
         for item in cache_dir {
@@ -201,6 +229,11 @@ impl UpdateStrategy {
         }
         let native = get_env_path("repo");
         copy_dir(native.as_path(), cache.as_path());
+        let _ = self.set_cache_timestamp(SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as usize);
+        let mut conf = Conf::from_json();
+        let _ = conf.set_update_strategy(self.clone());
+        let conf_path = get_env_path(CONF_FILE_PATH);
+        let _ = File::create(conf_path).unwrap().write_all(conf.to_json().as_bytes());
     }
 }
 
@@ -227,6 +260,8 @@ pub fn get_releases_from_github() -> Option<Vec<Value>> {
         if let Some(array) = json.as_array() {
             return Some(array.clone());
         }
+    } else {
+        panic!("Slimk : {:#?}", String::from_utf8(curl.stderr));
     }
     return None;
 }
@@ -249,7 +284,12 @@ pub fn get_releases_tags_from_github() -> Vec<String> {
 /// get release download url form github
 pub fn get_release_url_from_github(tag: Option<&str>) -> Option<String> {
     if let Some(version) = tag {
-        let url = format!("https://api.github.com/repos/Surrealism-All/slimk-template/releases/{}", version);
+        let mut url = String::from("https://api.github.com/repos/Surrealism-All/slimk-template/releases/");
+        if version.eq("latest") {
+            url.push_str(version);
+        } else {
+            url.push_str(format!("tags/{}", version).as_str());
+        }
         let curl = Command::new("curl").args([
             "-L", "-H", "Accept: application/vnd.github+json", "-H", "X-GitHub-Api-Version: 2022-11-28", &url
         ]).output().unwrap();

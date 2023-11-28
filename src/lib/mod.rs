@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::env::{current_dir, current_exe};
 use std::error::Error;
-use std::fs::{copy, create_dir, create_dir_all, File, read_dir, remove_dir};
+use std::fs::{copy, create_dir, create_dir_all, File, read_dir, remove_dir, remove_dir_all};
 use std::io;
 use std::io::{Read, Write};
 use clap::{Parser, Subcommand};
@@ -126,7 +126,7 @@ pub fn format_dir_name(prefix: &str, other: &str) -> PathBuf {
 
 pub fn unzip_file(zip_path: &Path, extract_to: &Path) -> Result<(), Box<dyn std::error::Error>> {
     if extract_to.exists() {
-        let _ = remove_dir(extract_to);
+        let _ = remove_dir_all(extract_to);
     }
     match create_dir(extract_to) {
         Ok(_) => {
@@ -177,4 +177,15 @@ pub fn copy_dir(src: &Path, dest: &Path) -> io::Result<()> {
     }
 
     Ok(())
+}
+
+pub fn get_template_info() -> Option<Vec<(String, String)>> {
+    let conf = Conf::from_json();
+    return if conf.remotes().is_empty() {
+        None
+    } else {
+        Some(conf.remotes().iter().map(|(name, template)| {
+            (name.to_string(), template.url().to_string())
+        }).collect::<Vec<(String, String)>>())
+    };
 }

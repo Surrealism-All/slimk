@@ -26,6 +26,7 @@ impl ListCommand {
         let conf = Conf::from_json();
         if self.is_all() {
             println!("{}", conf.display_remotes());
+            println!("{}", "--------------------------------");
             println!("{}", conf.display_natives());
             return;
         }

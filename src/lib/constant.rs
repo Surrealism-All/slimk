@@ -19,7 +19,7 @@ pub const CONF_FILE_PATH: &str = "conf/slimk.json";
 #[allow(dead_code)]
 pub const AUTHOR: &str = "syf20020816@outlook.com";
 /// standard remote repository: owner/repo
-pub const REMOTE_REPO: &str = "Surrealism-All/slimk-template";
+pub const REMOTE_REPO: &str = "https://github.com/Surrealism-All/slimk-template";
 /// standard template note
 pub const TEMPLATE_NOTE: &str = "Standard Template For Slint With SurrealismUI";
 
