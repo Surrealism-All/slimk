@@ -17,6 +17,11 @@ pub struct InitCommand {
 
 #[allow(dead_code)]
 impl InitCommand {
+    pub fn new(name: &str) -> Self {
+        InitCommand {
+            name: Some(name.to_string())
+        }
+    }
     fn name(&self) -> &str {
         return if let Some(name) = &self.name {
             name

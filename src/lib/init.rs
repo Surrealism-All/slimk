@@ -37,11 +37,11 @@ impl InitService {
         //check native repo
         match get_env_path("repo").read_dir() {
             Ok(inner) => {
-                println!("Slimk : {}", "Downloading | Updating default template...");
                 let mut is_empty = true;
                 for _item in inner {
                     is_empty = false;
                     if update_strategy.is_native_updated() {
+                        println!("Slimk : {}", "Downloading | Updating default template...");
                         let _ = update_strategy.update_native();
                     }
                     if update_strategy.is_cache_updated() {
@@ -49,6 +49,7 @@ impl InitService {
                     }
                 }
                 if is_empty {
+                    println!("Slimk : {}", "Downloading | Updating default template...");
                     let _ = update_strategy.update_native();
                     let _ = update_strategy.update_cache();
                 }

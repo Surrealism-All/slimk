@@ -10,10 +10,7 @@ fn main() {
     let _ = InitService::init_native_cache();
     let app = Slimk::parse();
     match app.sub_command() {
-        SubCommand::Create(create) => {
-            let mut u = Conf::from_json().update_strategy().clone();
-            u.update_native();
-        }
+        SubCommand::Create(create) => create.work(),
         SubCommand::Init(init) => {
             init.cargo_new();
             init.cargo_add_slint();

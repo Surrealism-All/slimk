@@ -1,5 +1,10 @@
+use std::option::Option::Some;
 use clap::{Args, Subcommand, ValueEnum};
 use crate::lib::core::Conf;
+use crate::lib::get_env_path;
+use std::io::{Read, stdin};
+use std::process::Command;
+use crate::lib::constant::CONF_FILE_PATH;
 
 #[derive(Args, Debug, Clone)]
 pub struct ConfigCommand {
@@ -24,6 +29,27 @@ impl ConfigCommand {
                 ConfigEnum::Update => println!("{}", conf_data.display_update_strategy()),
             };
         }
+        if let Some(conf_set) = self.set.as_ref() {
+            let mut conf = Conf::from_json();
+            match conf_set {
+                ConfigEnum::User => {
+                    let username = parse_stdin("please enter your username");
+                    let _ = conf.set_user(&username);
+                }
+                ConfigEnum::Email => {
+                    let email = parse_stdin("please enter your email");
+                    let _ = conf.set_email(&email);
+                }
+                _ => {
+                    println!("Slimk : {}", "The configuration is quite complex. Please open the file directly for modification");
+                    println!("{}", get_env_path("conf").join("slimk.json").to_str().unwrap());
+                }
+            }
+            let _ = conf.write_back();
+        }
+        if self.place {
+            println!("{}", get_env_path("conf").join("slimk.json").to_str().unwrap());
+        }
     }
 }
 
@@ -36,4 +62,11 @@ pub enum ConfigEnum {
     Natives,
     Create,
     Update,
+}
+
+fn parse_stdin(prompt: &str) -> String {
+    println!("Slimk: {}", prompt);
+    let mut stdin_str = String::new();
+    stdin().read_line(&mut stdin_str).expect("can not parse your enter!");
+    return String::from(stdin_str.trim());
 }

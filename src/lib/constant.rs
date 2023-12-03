@@ -96,7 +96,6 @@ export component App inherits Window {
 }"#;
 
 pub const MAIN_SLINT_VIEWS: &str = r#"import {Hello} from "../components/index.slint";
-import { SURButton } from "../modules/surrealism-ui/index.slint";
 
 export component MainView {
   height: 100%;
@@ -104,7 +103,7 @@ export component MainView {
   VerticalLayout {
     Hello{}
     Rectangle {
-      SURButton {
+      Button {
         theme:Dark;
         text: "Click Me!";
       }

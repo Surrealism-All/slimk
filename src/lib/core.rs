@@ -68,8 +68,14 @@ impl Conf {
     pub fn user(&self) -> &Option<String> {
         &self.user
     }
+    pub fn set_user(&mut self, user: &str) {
+        let _ = self.user.replace(String::from(user));
+    }
     pub fn email(&self) -> &Option<String> {
         &self.email
+    }
+    pub fn set_email(&mut self, email: &str) {
+        let _ = self.email.replace(String::from(email));
     }
     pub fn natives(&self) -> &HashMap<String, Template> {
         &self.natives
@@ -108,6 +114,10 @@ impl Conf {
     pub fn from_json() -> Conf {
         let conf_path = get_env_path(CONF_FILE_PATH);
         Figment::from(<Json as Format>::file(conf_path.as_path())).extract::<Conf>().unwrap()
+    }
+    pub fn write_back(&self) {
+        let conf_path = get_env_path(CONF_FILE_PATH);
+        let _ = File::create(conf_path).unwrap().write_all(self.to_json().as_bytes());
     }
 }
 
@@ -207,7 +217,7 @@ impl UpdateStrategy {
                             let _ = self.set_native_timestamp(SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as usize);
                             let mut conf = Conf::from_json();
                             let _ = conf.set_update_strategy(self.clone());
-                            let _ = conf.native_insert("slimk-binary",repo.join("slimk-binary").to_str().unwrap(),Some("this is a native default template use Slint with SurrealismUI"));
+                            let _ = conf.native_insert("slimk-binary", repo.join("slimk-binary").to_str().unwrap(), Some("this is a native default template use Slint with SurrealismUI"));
                             let conf_path = get_env_path(CONF_FILE_PATH);
                             let _ = File::create(conf_path).unwrap().write_all(conf.to_json().as_bytes());
                         }
@@ -331,7 +341,7 @@ impl Default for CreateStrategy {
     fn default() -> Self {
         CreateStrategy {
             remote: true,
-            default: "slimk".to_string(),
+            default: "slimk-binary".to_string(),
             secondary: "".to_string(),
             define: false,
         }
