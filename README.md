@@ -49,9 +49,43 @@ this command creates a new project but use the default strategy with no template
 
 > slimk config --get create
 ```
+
+## Error Description
+
+### Network
+
+Due to the lack of an independent server, I have designed it to rely on Github. 
+Therefore, if you are unable to connect well to Github, the initialization of SLNs is likely to display network errors
+
+```bash
+Slimk : init conf successfully!
+Slimk : Downloading | Updating default template...
+thread 'main' panicked at 'download failed, please check your network settings!', src\lib\core.rs:229:21
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+```
+
+#### solve
+
+1. go to : https://github.com/Surrealism-All/slimk-template and download latest release
+2. unzip it into repo directory
+3. write the following configuration into natives
+
+```json
+{
+  "natives": {
+    "slimk-binary": {
+      "id": 1701616493916,
+      "url": "E:\\slimk\\repo\\slimk-binary",
+      "note": "this is a native default template use Slint with SurrealismUI"
+    }
+  }
+}
+```
+## Res
+![img.png](img.png)
 ## Goals
 
-- [ ] : create command
+- [x] : create command
 - [x] : init command
 - [x] : list command
 - [x] : config command 
